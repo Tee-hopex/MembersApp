@@ -8,16 +8,28 @@ const Member = require('../models/member_model');
 
 
 // Get all members
-route.get('/all_members', (req, res) => {
-    let msg = 'success';
-    let count = members.length;
-    let status = 200;
-    
-    if (count === 0) {
-        msg = 'No members found';
+route.get('/all_members', async(req, res) => {
+
+    try {
+        // using the find method to query the database for all members
+        const allMembers = await Member.find().lean()
+
+        res.status(200).send({ msg: 'Members fetched successfully', members: allMembers });
+        
+    } catch (error) {
+        console.error("Error fetching members:", error);
+        return res.status(500).send({ msg: 'Internal server error' });
     }
 
-    res.status(status).send({msg, count, members});
+    // let msg = 'success';
+    // let count = members.length;
+    // let status = 200;
+    
+    // if (count === 0) {
+    //     msg = 'No members found';
+    // }
+
+    // res.status(status).send({msg, count, members});
 })
 
 // add a new member
