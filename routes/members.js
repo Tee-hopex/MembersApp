@@ -83,13 +83,17 @@ route.put('/edit', async (req,res) => {
 
     try {
         // Find the member by id and update their details
-        const doc = await Member.find({_id: id});
+        const [doc] = await Member.find({_id: id});
         if (!doc) {
             return res.status(400).send({ msg: 'Member with that id does not exist' });
         }
         doc.name = name? name: doc.name;
         doc.occupation = occupation? occupation: doc.occupation
         doc.age = age? age: doc.age
+        
+        const updatedMember = await doc.save()
+
+        return (res.status(200).send({msg: "Member updated successfully", updatedMember}))
         
     } catch(error) {
         console.error("Error updating member:", error);
@@ -129,25 +133,48 @@ route.put('/edit', async (req,res) => {
 })
 
 // Delete a member
-route.delete('/delete', (req, res) => {
-    const { id } = req.body;
+route.delete('/delete', async (req, res) => {
+    const { id, name, age } = req.body;
 
-    if (!id) return res.status(400).send({ msg: 'id required' });   
+    if (!id && !name && !age) return res.status(400).send({msg: 'query field required'});
 
-    // const index = -1;
+    try {
 
-    const index = members.findIndex((member) => {
-        // index++;
-        return (member.id === id);
-    })
+        
+        if (name && (!age || !id)) {
+            const deletedMember = await Member.deleteOne({name: name})
+            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        } 
+        if (age && (!name || !id)) {
+            const deletedMember = await Member.deleteOne({age: age})
+            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        } 
+        if (id && (!name || !age)) {
+            const deletedMember = await Member.deleteOne({_id: id})
+            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        }
 
-    if (!index || index === -1) {
-        return res.status(400).send({ msg: 'Member with that id does not exist' });
+    } catch(error){
+        console.log(`Error Deleting Member: ${error}`)
+        return res.status(500).send({ msg: 'Internal server error' });
     }
 
-    const [found] =  members.splice(index, 1);
+    // if (!id) return res.status(400).send({ msg: 'id required' });   
 
-    res.status(200).send({ msg: 'Member deleted successfully', found, members });
+    // // const index = -1;
+
+    // const index = members.findIndex((member) => {
+    //     // index++;
+    //     return (member.id === id);
+    // })
+
+    // if (!index || index === -1) {
+    //     return res.status(400).send({ msg: 'Member with that id does not exist' });
+    // }
+
+    // const [found] =  members.splice(index, 1);
+
+    // res.status(200).send({ msg: 'Member deleted successfully', found, members });
 })
 
 
