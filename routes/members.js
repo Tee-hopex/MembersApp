@@ -14,7 +14,7 @@ route.get('/all_members', async(req, res) => {
         // using the find method to query the database for all members
         const allMembers = await Member.find().lean()
 
-        res.status(200).send({ msg: 'Members fetched successfully', members: allMembers });
+        return(res.status(200).send({ msg: 'Members fetched successfully', members: allMembers }));
         
     } catch (error) {
         console.error("Error fetching members:", error);
@@ -50,7 +50,7 @@ route.post('/add', async (req, res) => {
         // Save the new member to the database
         await newMember.save();
 
-        res.status(201).send({ msg: 'Member added successfully', member: newMember });
+        return(res.status(201).send({ msg: 'Member added successfully', member: newMember }));
 
     } catch (error) {
         console.error("Error adding member:", error);
@@ -74,39 +74,58 @@ route.post('/add', async (req, res) => {
 });
 
 //Update a member
-route.put('/edit', (req,res) => {
+route.put('/edit', async (req,res) => {
     const {name, occupation, age, id} = req.body;
 
     if (!id) {
-        return(res.status(400).send({msg: 'id required'}))
+        return res.status(400).send({ msg: 'id required' });
     }
 
-    let index = -1
-
-    const found = members.find((member) => {
-        index++
-        return (member.id === id)
-    })
-
-    if (!found) {
-        return (res.status(400).send({msg: "member with that id does not exist"}))
+    try {
+        // Find the member by id and update their details
+        const doc = await Member.find({_id: id});
+        if (!doc) {
+            return res.status(400).send({ msg: 'Member with that id does not exist' });
+        }
+        doc.name = name? name: doc.name;
+        doc.occupation = occupation? occupation: doc.occupation
+        doc.age = age? age: doc.age
+        
+    } catch(error) {
+        console.error("Error updating member:", error);
+        return res.status(500).send({ msg: 'Internal server error' });
     }
 
-    // if (name) {
-    //     found.name = name
-    // } else {
-    //     found.name = found.name
+    // if (!id) {
+    //     return(res.status(400).send({msg: 'id required'}))
     // }
 
-    // name ? found.name = name : found.name = found.name
+    // let index = -1
 
-    found.name = name ? name : found.name 
-    found.occupation = occupation ? occupation : found.occupation
-    found.age = age ? age : found.age
+    // const found = members.find((member) => {
+    //     index++
+    //     return (member.id === id)
+    // })
 
-    members[index] = found
+    // if (!found) {
+    //     return (res.status(400).send({msg: "member with that id does not exist"}))
+    // }
 
-    return(res.status(200).send({msg: 'Successful update', members}))
+    // // if (name) {
+    // //     found.name = name
+    // // } else {
+    // //     found.name = found.name
+    // // }
+
+    // // name ? found.name = name : found.name = found.name
+
+    // found.name = name ? name : found.name 
+    // found.occupation = occupation ? occupation : found.occupation
+    // found.age = age ? age : found.age
+
+    // members[index] = found
+
+    // return(res.status(200).send({msg: 'Successful update', members}))
 })
 
 // Delete a member
