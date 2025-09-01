@@ -140,19 +140,22 @@ route.delete('/delete', async (req, res) => {
 
     try {
 
+        const deletedMember = await Member.deleteOne({_id: id})
+        return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+
         
-        if (name && (!age || !id)) {
-            const deletedMember = await Member.deleteOne({name: name})
-            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
-        } 
-        if (age && (!name || !id)) {
-            const deletedMember = await Member.deleteOne({age: age})
-            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
-        } 
-        if (id && (!name || !age)) {
-            const deletedMember = await Member.deleteOne({_id: id})
-            return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
-        }
+        // if (!(name && (age || id))) {
+        //     const deletedMember = await Member.deleteOne({name: name})
+        //     return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        // } 
+        // if (!(age && (name || id))) {
+        //     const deletedMember = await Member.deleteOne({age: age})
+        //     return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        // } 
+        // if (!(id && (name || age))) {
+        //     const deletedMember = await Member.deleteOne({_id: id})
+        //     return(res.status(200).send({msg: "Member deleted successfuly"}, deletedMember))
+        // }
 
     } catch(error){
         console.log(`Error Deleting Member: ${error}`)
@@ -179,13 +182,30 @@ route.delete('/delete', async (req, res) => {
 
 
 // endpoint to get a member by id
-route.get('/member/:id', (req, res) => {
-    const { id } = req.params;
-    const member = members.find((member) => member.id == id);
-    if (!member) {
-        return res.status(404).send({ msg: 'Member not found' });
+route.get('/member', async(req, res) => {
+    const { id } = req.body;
+
+     try {
+        if (!id) return res.status(400).send({ msg: 'id required' })
+
+        // const member = await Member.findById(id)
+        
+        const [member] = await Member.find({_id : id})
+
+        return res.status(200).send({msg: "success", member})
+       
+    } catch(error){
+        console.log(`Error Deleting Member: ${error}`)
+        return res.status(500).send({ msg: 'Internal server error' });
     }
-    res.status(200).send({ msg: 'Member found', member });
+
+
+
+    // const member = members.find((member) => member.id == id);
+    // if (!member) {
+    //     return res.status(404).send({ msg: 'Member not found' });
+    // }
+    // res.status(200).send({ msg: 'Member found', member });
 });
 
 
